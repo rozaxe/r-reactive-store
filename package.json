@@ -1,5 +1,5 @@
 {
-    "name": "r-store",
+    "name": "rx-store",
     "version": "0.1.0",
     "source": "src/index.ts",
     "main": "dist/index.js",
