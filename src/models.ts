@@ -1,4 +1,4 @@
-import { ValueObservable } from "r-value-observable"
+import { Observable } from 'rxjs'
 
 export type Collection<T extends { id: string } = any> = {
     create(item: T): T
@@ -7,8 +7,9 @@ export type Collection<T extends { id: string } = any> = {
     remove(id: string): void
 
     get(id: string): T | null
-    get$(id: string): ValueObservable<T | null>
-    getAllIds$(): ValueObservable<string[]>
+    get$(id: string): Observable<T | null>
+    getAllIds(): string[]
+    getAllIds$(): Observable<string[]>
 }
 
 export type Collections<T = { readonly [key: string]: { id: string } }> = {

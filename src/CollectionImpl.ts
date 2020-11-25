@@ -1,5 +1,4 @@
-import { BehaviorSubject } from "rxjs"
-import { ValueObservable } from "r-value-observable"
+import { Observable, BehaviorSubject } from "rxjs"
 import { Collection } from "./models"
 import { DuplicateIdError, IdNotFoundError, MissingIdError } from "./errors"
 
@@ -75,7 +74,7 @@ export class CollectionImpl<T extends { id: string } = any> implements Collectio
         return null
     }
 
-    get$ = (id: string): ValueObservable<T> => {
+    get$ = (id: string): Observable<T> => {
         // Register empty subject if not exists
         if (!this.items[id]) {
             this.items[id] = new BehaviorSubject(null)
@@ -84,11 +83,11 @@ export class CollectionImpl<T extends { id: string } = any> implements Collectio
         return this.items[id]
     }
 
-    getAllId$ = (): string[] => {
+    getAllIds = (): string[] => {
         return this.ids.value
     }
 
-    getAllIds$ = (): ValueObservable<string[]> => {
+    getAllIds$ = (): Observable<string[]> => {
         return this.ids
     }
 

@@ -1,3 +1,4 @@
+import { TestScheduler } from 'rxjs/testing'
 import { createStore, Store } from "../src";
 import { DuplicateIdError, IdNotFoundError, MissingIdError } from "../src/errors";
 
@@ -9,8 +10,10 @@ type Todo = {
 
 describe('reactive store', () => {
     let store: Store<{ todos: Todo }>
+    let scheduler: TestScheduler
 
     beforeEach(() => {
+        scheduler = new TestScheduler((actual, expected) => expect(expected).toEqual(actual))
         store = createStore<{ todos: Todo }>('todos')
         store.todos.create({ id: 'a', label: 'Lorem', done: false })
     })
@@ -49,18 +52,27 @@ describe('reactive store', () => {
 
         it('should create observed item', () => {
             const item$ = store.todos.get$('1')
+            scheduler.run(({ expectObservable }) => {
+                expectObservable(item$).toBe('a', { a: null })
+            })
             const todo = { id: '1', label: 'Ipsum', done: false }
             const created = store.todos.create(todo)
             expect(created).toEqual(todo)
-            expect(item$.value).toEqual(todo)
+            scheduler.run(({ expectObservable }) => {
+                expectObservable(item$).toBe('a', { a: todo })
+            })
         })
 
         it('should create item and update ids', () => {
             const ids$ = store.todos.getAllIds$()
-            expect(ids$.value).toHaveLength(1)
+            scheduler.run(({ expectObservable }) => {
+                expectObservable(ids$).toBe('a', { a: ['a'] })
+            })
             const todo = { id: '1', label: 'Ipsum', done: false }
             store.todos.create(todo)
-            expect(ids$.value).toHaveLength(2)
+            scheduler.run(({ expectObservable }) => {
+                expectObservable(ids$).toBe('a', { a: ['a', '1'] })
+            })
         })
     })
 
@@ -69,7 +81,9 @@ describe('reactive store', () => {
             const item$ = store.todos.get$('a')
             const updated = store.todos.update('a', { label: 'Ipsum', done: true })
             expect(updated).toEqual({ id: 'a', label: 'Ipsum', done: true })
-            expect(item$.value).toEqual({ id: 'a', label: 'Ipsum', done: true })
+            scheduler.run(({ expectObservable }) => {
+                expectObservable(item$).toBe('a', { a: { id: 'a', label: 'Ipsum', done: true } })
+            })
         })
     })
 
@@ -78,16 +92,22 @@ describe('reactive store', () => {
             const item$ = store.todos.get$('a')
             const patched = store.todos.patch('a', { done: true })
             expect(patched).toEqual({ id: 'a', label: 'Lorem', done: true })
-            expect(item$.value).toEqual({ id: 'a', label: 'Lorem', done: true })
+            scheduler.run(({ expectObservable }) => {
+                expectObservable(item$).toBe('a', { a: { id: 'a', label: 'Lorem', done: true } })
+            })
         })
     })
 
     describe('remove', () => {
         it('should delete item', () => {
             const ids$ = store.todos.getAllIds$()
-            expect(ids$.value).toHaveLength(1)
+            scheduler.run(({ expectObservable }) => {
+                expectObservable(ids$).toBe('a', { a: ['a'] })
+            })
             store.todos.remove('a')
-            expect(ids$.value).toHaveLength(0)
+            scheduler.run(({ expectObservable }) => {
+                expectObservable(ids$).toBe('a', { a: [] })
+            })
         })
 
         it('should not delete missing id', () => {
@@ -98,14 +118,18 @@ describe('reactive store', () => {
     })
 
     describe('get$', () => {
-        it('should synchronously get item', () => {
-            const item = store.todos.get$('a').value
-            expect(item).toEqual({ id: 'a', label: 'Lorem', done: false })
+        it('should get item', () => {
+            const item$ = store.todos.get$('a')
+            scheduler.run(({ expectObservable }) => {
+                expectObservable(item$).toBe('a', { a: { id: 'a', label: 'Lorem', done: false } })
+            })
         })
 
-        it('should synchronously get missing item', () => {
-            const item = store.todos.get$('123').value
-            expect(item).toBeNull()
+        it('should get missing item', () => {
+            const item$ = store.todos.get$('123')
+            scheduler.run(({ expectObservable }) => {
+                expectObservable(item$).toBe('a', { a: null })
+            })
         })
     })
 })
