@@ -1,11 +1,12 @@
-import { Observable, BehaviorSubject } from "rxjs"
+import { Observable, BehaviorSubject, combineLatest } from "rxjs"
+import { mergeMap } from 'rxjs/operators'
 import { Collection } from "./models"
 import { DuplicateIdError, IdNotFoundError, MissingIdError } from "./errors"
 
 export class CollectionImpl<T extends { id: string } = any> implements Collection<T> {
 
     private items: Record<string, BehaviorSubject<T>> = {}
-    private ids: BehaviorSubject<string[]> = new BehaviorSubject([])
+    private ids$: BehaviorSubject<string[]> = new BehaviorSubject([])
 
     create = (item: T): T => {
         // Guard against non identifiable item
@@ -26,8 +27,8 @@ export class CollectionImpl<T extends { id: string } = any> implements Collectio
         }
 
         // Update IDs
-        this.ids.next([
-            ...this.ids.value,
+        this.ids$.next([
+            ...this.ids$.value,
             item.id
         ])
 
@@ -59,7 +60,7 @@ export class CollectionImpl<T extends { id: string } = any> implements Collectio
         this.assertItemExists(id)
 
         // Update IDs
-        this.ids.next(this.ids.value.filter(i => i !== id))
+        this.ids$.next(this.ids$.value.filter(i => i !== id))
 
         // Remove observable
         this.items[id].next(null)
@@ -84,11 +85,27 @@ export class CollectionImpl<T extends { id: string } = any> implements Collectio
     }
 
     getAllIds = (): string[] => {
-        return this.ids.value
+        return this.ids$.value
     }
 
     getAllIds$ = (): Observable<string[]> => {
-        return this.ids
+        return this.ids$
+    }
+
+    getAll = (): T[] => {
+        return this.ids$.value.map(
+            id => this.get(id)
+        )
+    }
+
+    getAll$ = (): Observable<T[]> => {
+        return this.ids$.pipe(
+            mergeMap((ids: string[]) => combineLatest(
+                ids.map(
+                    id => this.items[id]
+                )
+            ))
+        )
     }
 
     private assertItemExists = (id: string) => {

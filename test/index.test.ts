@@ -132,4 +132,23 @@ describe('reactive store', () => {
             })
         })
     })
+    
+    describe('getAll', () => {
+
+        beforeEach(() => {
+            store.todos.create({ id: '1', label: 'Ipsum', done: false })
+        })
+
+        it('should get items', () => {
+            const items = store.todos.getAll()
+            expect(items).toEqual([ { id: 'a', label: 'Lorem', done: false }, { id: '1', label: 'Ipsum', done: false } ])
+        })
+
+        it('should get items$', () => {
+            const items$ = store.todos.getAll$()
+            scheduler.run(({ expectObservable }) => {
+                expectObservable(items$).toBe('a', { a: [ { id: 'a', label: 'Lorem', done: false }, { id: '1', label: 'Ipsum', done: false } ] })
+            })
+        })
+    })
 })

@@ -10,6 +10,8 @@ export type Collection<T extends { id: string } = any> = {
     get$(id: string): Observable<T | null>
     getAllIds(): string[]
     getAllIds$(): Observable<string[]>
+    getAll(): T[]
+    getAll$(): Observable<T[]>
 }
 
 export type Collections<T = { readonly [key: string]: { id: string } }> = {

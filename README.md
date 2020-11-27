@@ -63,6 +63,14 @@ Collection<T>.getAllIds$(): ValueObservable<string[]>
 ```
 
 ```ts
+Collection<T>.getAll(): T[]
+```
+
+```ts
+Collection<T>.getAll$(): ValueObservable<T[]>
+```
+
+```ts
 Collection<T>.create(item: T): T
 ```
 
