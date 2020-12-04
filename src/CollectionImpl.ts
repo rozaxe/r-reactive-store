@@ -1,4 +1,4 @@
-import { Observable, BehaviorSubject, combineLatest } from "rxjs"
+import { Observable, BehaviorSubject, combineLatest, iif, of } from "rxjs"
 import { mergeMap } from 'rxjs/operators'
 import { Collection } from "./models"
 import { DuplicateIdError, IdNotFoundError, MissingIdError } from "./errors"
@@ -100,9 +100,13 @@ export class CollectionImpl<T extends { id: string } = any> implements Collectio
 
     getAll$ = (): Observable<T[]> => {
         return this.ids$.pipe(
-            mergeMap((ids: string[]) => combineLatest(
-                ids.map(
-                    id => this.items[id]
+            mergeMap((ids: string[]) => iif(
+                () => ids.length === 0,
+                of([]),
+                combineLatest(
+                    ids.map(
+                        id => this.items[id]
+                    )
                 )
             ))
         )
